@@ -4,9 +4,9 @@ import jwt from 'jsonwebtoken';
 import { SECRET } from '../middlewares/authMiddleware.js';
 
 const registerUser = async (req, res) => {
-    const { username, name, email, password, role } = req.body;
+    const { username, email, password, role } = req.body;
 
-    if (!username || !name || !email || !password || !role) {
+    if (!username || !email || !password || !role) {
         return res.status(400).json({ message: 'All fields are required' });
     }
 
@@ -23,7 +23,6 @@ const registerUser = async (req, res) => {
         // Create new user
         const newUser = await User.create({
             username,
-            name,
             email,
             role,
             password: hashedPassword
@@ -33,7 +32,6 @@ const registerUser = async (req, res) => {
             message: 'User registered successfully',
             user: {
                 username: newUser.username,
-                name: newUser.name,
                 email: newUser.email,
                 role: newUser.role
             }
@@ -63,7 +61,7 @@ const loginUser = async (req, res) => {
         const token = jwt.sign(
             { id: user._id, email: user.email }, 
             SECRET,
-            { expiresIn: '2h' });
+            { expiresIn: '1h' });
         
         res.cookie("token", token, {
             httpOnly: true,
@@ -75,7 +73,6 @@ const loginUser = async (req, res) => {
             message: 'User logged in successfully', 
             user: {
                 username: user.username,
-                name: user.name,
                 email: user.email,
                 role: user.role
             }

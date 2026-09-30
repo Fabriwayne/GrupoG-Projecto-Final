@@ -4,7 +4,7 @@ const SECRET = process.env.JWT_SECRET;
 
 const verifyToken = async (req, res, next) => {
     try {
-        const token = req.headers['authorization']?.split(' ')[1];
+        const token = req.cookies.token;
 
         if (!token) {
             return res.status(401).json({ message: 'Authorization header missing or invalid' });
@@ -15,7 +15,7 @@ const verifyToken = async (req, res, next) => {
                 return res.status(403).json({ message: 'Invalid token or expired'});
             }
 
-            req.usuario = decoded;
+            req.user = decoded;
 
             next();
         });
