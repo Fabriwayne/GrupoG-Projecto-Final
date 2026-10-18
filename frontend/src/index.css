@@ -1,1 +1,100 @@
 @import "tailwindcss";
+
+/* =====================================================================
+   DISEÑO "CUADERNO": editorial, cálido, papel
+   Los colores, fuentes y sombras se registran como tokens de Tailwind,
+   así se usan directo en las clases: bg-papel, text-tinta, font-display,
+   shadow-papel, border-linea, bg-terracota, text-bosque...
+   ===================================================================== */
+@theme {
+  --color-papel: #f5efe4;
+  /* fondo de la página */
+  --color-hoja: #fffaf1;
+  /* tarjetas */
+  --color-hoja-2: #f0e7d7;
+  --color-tinta: #2a2118;
+  /* texto principal */
+  --color-tinta-suave: #6f6152;
+  /* texto secundario */
+  --color-linea: #dccdb4;
+  /* bordes */
+  --color-terracota: #c2410c;
+  /* acento de estudiante */
+  --color-terracota-suave: #f8e1d2;
+  --color-bosque: #3f6b4a;
+  /* acento de profesor */
+  --color-bosque-suave: #dfe9dc;
+  --color-aviso: #f6e3b8;
+  --color-aviso-tinta: #6e4a00;
+  --color-peligro: #a3261b;
+  --color-peligro-suave: #faeae4;
+  --color-peligro-linea: #e7bfb3;
+
+  --font-sans: "Source Sans 3", Georgia, sans-serif;
+  --font-display: "Fraunces", Georgia, serif;
+
+  --shadow-papel: 4px 4px 0 rgb(42 33 24 / .08);
+  --shadow-papel-lg: 8px 8px 0 rgb(42 33 24 / .12);
+  --shadow-tinta-sm: 2px 2px 0 var(--color-tinta);
+  --shadow-tinta: 3px 3px 0 var(--color-tinta);
+  --shadow-tinta-lg: 5px 5px 0 var(--color-tinta);
+
+  --animate-flotar: flotar 6s ease-in-out infinite;
+  --animate-flotar-lento: flotar 7s ease-in-out -2s infinite;
+
+  @keyframes flotar {
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+
+  /* Entrada de las burbujas de error: aparecen y dan un pequeño sacudón */
+  --animate-burbuja: burbuja .35s ease-out both;
+
+  @keyframes burbuja {
+    0% {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+
+    60% {
+      opacity: 1;
+      transform: translateY(0) translateX(-3px);
+    }
+
+    80% {
+      transform: translateX(3px);
+    }
+
+    100% {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+}
+
+/* Color de acento según el rol (bg-acento, text-acento...).
+   Por defecto es terracota; las pantallas de profesor lo cambian a verde
+   con las clases [--acento:...] del contenedor (ver ui.profesor en Stat.jsx). */
+@theme inline {
+  --color-acento: var(--acento);
+  --color-acento-suave: var(--acento-suave);
+}
+
+@layer base {
+  :root {
+    --acento: var(--color-terracota);
+    --acento-suave: var(--color-terracota-suave);
+  }
+
+  /* Fondo de papel rayado */
+  body {
+    @apply bg-papel text-tinta antialiased;
+    background-image: repeating-linear-gradient(0deg, transparent 0 31px, rgb(120 90 60 / .07) 31px 32px);
+    background-attachment: fixed;
+  }
+
+  ::selection {
+    @apply bg-terracota text-hoja;
+  }
+}

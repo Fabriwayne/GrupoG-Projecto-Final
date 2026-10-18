@@ -1,6 +1,10 @@
 import { useState } from "react"
 import { loginUser } from "../services/authServices.js";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { AuthLayout, Burbuja, sinGloboDelNavegador, traducirError, ui } from "../components/Stat";
+
+// Correo con texto antes y después de la @ y un punto en el dominio (nombre@correo.com)
+const PATRON_CORREO = "[^@\\s]+@[^@\\s]+\\.[^@\\s]+"
 
 function Login() {
   const navigate = useNavigate()
@@ -8,79 +12,93 @@ function Login() {
     email: "",
     password: ""
   })
+  // Error que devuelve el servidor: { campo, texto } o null
+  const [errorServidor, setErrorServidor] = useState(null)
 
   const handleOnSubmit = async (e) => {
     e.preventDefault()
 
     try {
-      const data = await loginUser(datos)
-
-      if (data.user.role === 'student') {
-        navigate("/perfil-student");
-      } else if (data.user.role === 'teacher') {
-        navigate("/perfil-teacher");
-      }
+      await loginUser(datos)
+      navigate('/dashboard')
 
     } catch (error) {
       console.log(error.message)
+      setErrorServidor(traducirError(error.message))
     }
   }
 
+  // Al escribir de nuevo se quita el error del servidor
+  const cambiar = (campo, valor) => {
+    setDatos({ ...datos, [campo]: valor })
+    setErrorServidor(null)
+  }
+
+  const errorEn = (campo) => errorServidor?.campo === campo
+
   return (
-    <main className="min-h-screen bg-gray-50 flex items-center justify-center px-6">
+    <AuthLayout
+      titulo="Bienvenido de nuevo"
+      subtitulo="Inicia sesión para continuar."
+      pie={<>¿No tienes cuenta? <Link to="/registro">Regístrate</Link></>}
+    >
+      <form onSubmit={handleOnSubmit} className="grid gap-4.5">
 
-      <form onSubmit={handleOnSubmit} className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg">
+        <label className={ui.campo}>
+          <span>Correo electrónico</span>
+          <input
+            type="email"
+            placeholder="correo@ejemplo.com"
+            className={ui.input}
+            value={datos.email}
+            onChange={(e) => cambiar("email", e.target.value)}
+            required
+            pattern={PATRON_CORREO}
+            onInvalid={sinGloboDelNavegador}
+            aria-invalid={errorEn("email") || undefined}
+          />
+          {errorEn("email") ? (
+            <Burbuja role="alert">{errorServidor.texto}</Burbuja>
+          ) : (
+            <Burbuja className={ui.burbujaCampo}>
+              Escribe un correo válido, por ejemplo nombre@correo.com
+            </Burbuja>
+          )}
+        </label>
 
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Bienvenido de nuevo
-        </h1>
+        <label className={ui.campo}>
+          <span>Contraseña</span>
+          <input
+            type="password"
+            placeholder="••••••••"
+            className={ui.input}
+            value={datos.password}
+            onChange={(e) => cambiar("password", e.target.value)}
+            required
+            onInvalid={sinGloboDelNavegador}
+            aria-invalid={errorEn("password") || undefined}
+          />
+          {errorEn("password") ? (
+            <Burbuja role="alert">{errorServidor.texto}</Burbuja>
+          ) : (
+            <Burbuja className={ui.burbujaCampo}>Escribe tu contraseña.</Burbuja>
+          )}
+        </label>
 
-        <p className="text-gray-500 mb-8">
-          Inicia sesión para continuar.
-        </p>
+        {errorServidor && !errorServidor.campo && <p className={`${ui.error} mb-0!`} role="alert">{errorServidor.texto}</p>}
 
-        <div className="space-y-5">
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Correo electrónico
-            </label>
-
-            <input
-              type="email"
-              placeholder="correo@ejemplo.com"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
-              value={datos.email}
-              onChange={(e) => setDatos({ ...datos, email: e.target.value })}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Contraseña
-            </label>
-
-            <input
-              type="password"
-              placeholder="••••••••"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
-              value={datos.password}
-              onChange={(e) => setDatos({ ...datos, password: e.target.value })}
-            />
-          </div>
-
+        <div className="text-right">
+          <Link to="/forgot-password" className="text-xs font-semibold text-acento hover:underline">
+            ¿Olvidaste tu contraseña?
+          </Link>
         </div>
 
-        <button
-          type="submit"
-          className="w-full mt-8 bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition"
-        >
+        <button type="submit" className={`${ui.btnPrimarioGrande} mt-2 w-full`}>
           Iniciar sesión
         </button>
 
       </form>
-
-    </main>
+    </AuthLayout>
   )
 }
 

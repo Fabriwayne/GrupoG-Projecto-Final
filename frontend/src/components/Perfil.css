@@ -1,0 +1,6 @@
+/*
+  Los estilos del área privada (perfil, crear curso, gestionar curso) ahora están
+  escritos con clases de Tailwind directamente en cada componente.
+  Las clases que se repiten (botones, tarjetas, formularios) están en el objeto
+  "ui" de components/Stat.jsx, y los colores del diseño en src/index.css.
+*/

@@ -12,7 +12,7 @@ const verifyToken = async (req, res, next) => {
 
         jwt.verify(token, SECRET, (error, decoded) => {
             if (error) {
-                return res.status(403).json({ message: 'Invalid token or expired'});
+                return res.status(401).json({ message: 'Invalid token or expired'});
             }
 
             req.user = decoded;
@@ -25,4 +25,19 @@ const verifyToken = async (req, res, next) => {
     }
 };
 
-export { verifyToken, SECRET };
+// Igual que verifyToken, pero si no hay sesión (o es inválida) deja pasar la petición sin req.user
+const optionalAuth = (req, res, next) => {
+    const token = req.cookies?.token;
+
+    if (token) {
+        try {
+            req.user = jwt.verify(token, SECRET);
+        } catch {
+            // token inválido o vencido: se trata como visitante
+        }
+    }
+
+    next();
+};
+
+export { verifyToken, optionalAuth, SECRET };

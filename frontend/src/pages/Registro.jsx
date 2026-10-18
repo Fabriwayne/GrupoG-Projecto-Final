@@ -1,6 +1,11 @@
 import { useState } from "react"
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { registerUser } from "../services/authServices.js"
+import { AuthLayout, Burbuja, sinGloboDelNavegador, traducirError, ui } from "../components/Stat";
+
+// Correo con texto antes y después de la @ y un punto en el dominio (nombre@correo.com)
+const PATRON_CORREO = "[^@\\s]+@[^@\\s]+\\.[^@\\s]+";
+const PATRON_USERNAME = "@?[a-zA-Z0-9_\-]{3,30}";
 
 function Registro() {
 
@@ -11,112 +16,127 @@ function Registro() {
     password: "",
     role: ""
   })
+  // Error que devuelve el servidor: { campo, texto } o null
+  const [errorServidor, setErrorServidor] = useState(null)
 
-  const handleSubmit = async (e)=>{
+  const handleSubmit = async (e) => {
     e.preventDefault()
     try {
-      const data = await registerUser(formulario)
+      await registerUser(formulario)
       navigate('/login')
-      
+
     } catch (error) {
       console.log(error.message)
+      setErrorServidor(traducirError(error.message))
     }
-    
+
   }
 
+  // Al escribir de nuevo se quita el error del servidor
+  const cambiar = (campo, valor) => {
+    setFormulario({ ...formulario, [campo]: valor })
+    setErrorServidor(null)
+  }
+
+  const errorEn = (campo) => errorServidor?.campo === campo
+
+  // Burbuja del servidor si el error es de este campo; si no, la del navegador (solo si está mal escrito)
+  const burbuja = (campo, ayuda) =>
+    errorEn(campo) ? (
+      <Burbuja role="alert">{errorServidor.texto}</Burbuja>
+    ) : (
+      <Burbuja className={ui.burbujaCampo}>{ayuda}</Burbuja>
+    )
+
   return (
-    <main className="min-h-screen bg-gray-50 flex items-center justify-center px-6">
+    <AuthLayout
+      titulo="Crear cuenta"
+      subtitulo="Regístrate para comenzar."
+      pie={<>¿Ya tienes cuenta? <Link to="/login">Inicia sesión</Link></>}
+    >
+      <form onSubmit={handleSubmit} className="grid gap-4.5">
 
-      <form onSubmit={handleSubmit} className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg">
+        <label className={ui.campo}>
+          <span>Username</span>
+          <input
+            type="text"
+            placeholder="@tu_usuario"
+            className={ui.input}
+            value={formulario.username}
+            onChange={(e) => cambiar("username", e.target.value)}
+            required
+            pattern={PATRON_USERNAME}
+            minLength={3}
+            onInvalid={sinGloboDelNavegador}
+            aria-invalid={errorEn("username") || undefined}
+          />
+          {burbuja("username", "Escribe un nombre de usuario de al menos 3 caracteres.")}
+        </label>
 
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Crear cuenta
-        </h1>
+        <label className={ui.campo}>
+          <span>Correo electrónico</span>
+          <input
+            type="email"
+            placeholder="correo@ejemplo.com"
+            className={ui.input}
+            value={formulario.email}
+            onChange={(e) => cambiar("email", e.target.value)}
+            required
+            pattern={PATRON_CORREO}
+            onInvalid={sinGloboDelNavegador}
+            aria-invalid={errorEn("email") || undefined}
+          />
+          {burbuja("email", "Escribe un correo válido, por ejemplo nombre@correo.com")}
+        </label>
 
-        <p className="text-gray-500 mb-8">
-          Regístrate para comenzar.
-        </p>
+        <label className={ui.campo}>
+          <span>Contraseña</span>
+          <input
+            type="password"
+            placeholder="••••••••"
+            className={ui.input}
+            value={formulario.password}
+            onChange={(e) => cambiar("password", e.target.value)}
+            required
+            minLength={8}
+            onInvalid={sinGloboDelNavegador}
+            aria-invalid={errorEn("password") || undefined}
+          />
+          {burbuja("password", "La contraseña debe tener al menos 8 caracteres.")}
+        </label>
 
-        <div className="space-y-5">
+        <label className={ui.campo}>
+          <span>Tipo de usuario</span>
+          <select
+            className={ui.input}
+            value={formulario.role}
+            onChange={(e) => cambiar("role", e.target.value)}
+            required
+            onInvalid={sinGloboDelNavegador}
+          >
+            <option value="">
+              Selecciona un rol
+            </option>
+            <option value="student">
+              Estudiante
+            </option>
 
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Username
-            </label>
+            <option value="teacher">
+              Profesor
+            </option>
+          </select>
+          {burbuja("role", "Elige si eres estudiante o profesor.")}
+        </label>
 
-            <input
-              type="text"
-              placeholder="@tugatica_losmina"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
-              value={formulario.username}
-              onChange={(e)=>setFormulario({...formulario, username: e.target.value})}
-            />  
-          </div>
+        {errorServidor && !errorServidor.campo && <p className={`${ui.error} mb-0!`} role="alert">{errorServidor.texto}</p>}
 
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Correo electrónico
-            </label>
-
-            <input
-              type="email"
-              placeholder="correo@ejemplo.com"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
-              value={formulario.email}
-              onChange={(e)=>setFormulario({...formulario, email: e.target.value})}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Contraseña
-            </label>
-
-            <input
-              type="password"
-              placeholder="••••••••"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
-              value={formulario.password}
-              onChange={(e)=>setFormulario({...formulario, password: e.target.value})}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Tipo de usuario
-            </label>
-
-            <select
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
-              value={formulario.role}
-              onChange={(e)=>setFormulario({...formulario, role: e.target.value})}
-            > 
-              <option value="">
-                Selecciona un rol
-              </option>
-              <option value="student">
-                Estudiante
-              </option>
-
-              <option value="teacher">
-                Profesor
-              </option>
-            </select>
-          </div>
-
-        </div>
-
-        <button
-          type="submit"
-          className="w-full mt-8 bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition"
-        >
+        <button type="submit" className={`${ui.btnPrimarioGrande} mt-2 w-full`}>
           Registrarme
         </button>
 
       </form>
-      {console.log(formulario)}
-    </main>
-    
+    </AuthLayout>
+
   )
 }
 
